@@ -33,8 +33,6 @@ input:
               description: Parameters to pass to the method (either array or object)
               oneOf:
                 - type: array
-                  items:
-                    type: any
                 - type: object
           required: [ id, method ]
 output:
@@ -85,4 +83,6 @@ call: http
 with:
   method: post
   endpoint: ${ .endpoint }
+  headers:
+    Content-Type: application/json
   body: ${ .request }
