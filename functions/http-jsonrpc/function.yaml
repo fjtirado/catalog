@@ -1,0 +1,88 @@
+input:
+  schema:
+    document:
+      type: object
+      properties:
+        endpoint:
+          $ref: https://serverlessworkflow.io/schemas/1.0.0/workflow.yaml#/$defs/endpoint
+          title: Endpoint
+          description: The HTTP endpoint to send JSON-RPC requests to
+        request:
+          type: object
+          title: Request
+          description: The JSON-RPC request to perform
+          properties:
+            jsonrpc:
+              type: string
+              enum: ['2.0']
+              default: '2.0'
+              title: JsonRPC
+              description: JSON-RPC protocol version (must be '2.0')
+            id:
+              title: Id
+              description: The message's unique identifier
+              oneOf:
+                - type: integer
+                - type: string
+            method:
+              type: string
+              title: Method
+              description: The name of the method to invoke
+            params:
+              title: Parameters
+              description: Parameters to pass to the method (either array or object)
+              oneOf:
+                - type: array
+                  items:
+                    type: any
+                - type: object
+          required: [ id, method ]
+output:
+  schema:
+    document:
+      allOf:
+        - type: object
+          properties:
+            jsonrpc:
+              type: string
+              enum: ['2.0']
+              default: '2.0'
+              title: JsonRPC
+              description: JSON-RPC protocol version (must be '2.0')
+            id:
+              title: Id
+              description: The message's unique identifier
+              oneOf:
+                - type: integer
+                - type: string
+          required: [ id ]
+        - oneOf:
+            - type: object
+              properties:
+                result:
+                  title: Result
+                  description: The result returned by the invoked RPC method
+              required: [ result ]
+            - type: object
+              properties:
+                error:
+                  type: object
+                  properties:
+                    code:
+                      type: integer
+                      title: Code
+                      description: The error code
+                    message:
+                      type: string
+                      title: Message
+                      description: The error message
+                    data:
+                      title: data
+                      description: Additional error data
+                  required: [ code, message ]
+              required: [ error ]
+call: http
+with:
+  method: post
+  endpoint: ${ .endpoint }
+  body: ${ .request }
