@@ -4,7 +4,7 @@ input:
       type: object
       properties:
         endpoint:
-          $ref: https://serverlessworkflow.io/schemas/1.0.0/workflow.yaml#/$defs/endpoint
+          $ref: https://serverlessworkflow.io/schemas/1.0.0/workflow.json#/$defs/endpoint
           title: Endpoint
           description: The HTTP endpoint to send JSON-RPC requests to
         request:
