@@ -52,7 +52,6 @@ run:
       timestamp: ${ .timestamp }
       format: ${ .format }
     code: |
-      import argparse
       import logging
       import sys
       import json
@@ -73,50 +72,40 @@ run:
               return datetime.fromtimestamp(record.created).astimezone().isoformat()
       
       def main():
-          parser = argparse.ArgumentParser(description="Perform logging based on specified parameters.")
-          parser.add_argument('--message', type=str, required=True, help="The message to log.")
-          parser.add_argument('--level', type=str, choices=['trace', 'debug', 'information', 'warning', 'error', 'critical'], default='information', help="The level of the message to log.")
-          parser.add_argument('--context', type=str, help="The log's source context. Defaults to None.")
-          parser.add_argument('--arguments', type=str, help="A JSON string of key/value mapping of arguments to use to interpolate the log message.")
-          parser.add_argument('--output', type=str, help="The path to the file to append the log message to. Defaults to STDOUT.")
-          parser.add_argument('--timestamp', action='store_true', help="Determines whether or not to timestamp the log message.")
-          parser.add_argument('--format', type=str, default='{TIMESTAMP} [{LEVEL}] ({CONTEXT}): {MESSAGE}', help="The format string for the log message.")
-          args = parser.parse_args()
+          log_level = log_levels[level]
           
-          log_level = log_levels[args.level]
-          
-          format_string = args.format
-          if args.timestamp:
+          format_string = format
+          if timestamp:
               format_string = format_string.replace('{TIMESTAMP}', '%(asctime)s')
           else:
               format_string = format_string.replace('{TIMESTAMP}', '')
-          if not args.context:
+          if not context:
               format_string = format_string.replace(' ({CONTEXT})', '')
               
           format_string = format_string.strip(':').strip()
 
-          log_message = args.message
-          if args.arguments:
+          log_message = message
+          if arguments:
               try:
-                  log_arguments = json.loads(args.arguments)
+                  log_arguments = json.loads(arguments)
                   log_message = log_message.format(**log_arguments)
               except json.JSONDecodeError:
                   print("Error: Invalid JSON format for --arguments")
                   sys.exit(1)
           
-          logger = logging.getLogger(args.context or '__main__')
+          logger = logging.getLogger(context or '__main__')
           logger.setLevel(log_level)
           
           formatter = ISO8601Formatter(format_string.replace('{LEVEL}', '%(levelname)s')
                                             .replace('{CONTEXT}', '%(name)s')
                                             .replace('{MESSAGE}', '%(message)s')) \
-              if args.timestamp else \
+              if timestamp else \
               logging.Formatter(format_string.replace('{LEVEL}', '%(levelname)s')
                                               .replace('{CONTEXT}', '%(name)s')
                                               .replace('{MESSAGE}', '%(message)s'))
 
-          if args.output:
-              handler = logging.FileHandler(args.output)
+          if output:
+              handler = logging.FileHandler(output)
           else:
               handler = logging.StreamHandler(sys.stdout)
               
@@ -131,7 +120,7 @@ run:
           
           logger.log(log_level, log_message)
           
-          if args.output:
+          if output:
               log_output.seek(0)
               print(log_output.getvalue().strip())
           
